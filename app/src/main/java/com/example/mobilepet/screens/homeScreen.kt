@@ -1,83 +1,168 @@
 package com.example.mobilepet.screens
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.border
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.FloatingActionButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
+import androidx.compose.foundation.layout.*
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.mobilepet.R
+import com.example.mobilepet.models.PetModel
+import com.example.mobilepet.models.StatusBarsColumn
+import kotlinx.coroutines.delay
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
-import com.example.mobilepet.navigation.BottomNavigationBar
 
 @Composable
 fun HomeScreen(navController: NavController) {
-    Text("Home Screen")
+    val petModel: PetModel = viewModel()
 
-    Scaffold(
-        bottomBar = { BottomNavigationBar(navController) },
-        containerColor = MaterialTheme.colorScheme.background
-    ) { innerPadding ->
-        Column(
+    var showDialog by remember { mutableStateOf(false) }
+    var petName by remember { mutableStateOf("") }
+    var petType by remember { mutableStateOf("") }
+
+    LaunchedEffect(petModel.pet) {
+        showDialog = petModel.pet == null
+    }
+
+    // PET REST TIMER //
+    var lastInteractionTime by remember { mutableStateOf(System.currentTimeMillis()) }
+    val interactionModifier = Modifier.pointerInput(Unit) {
+        while (true) {
+            awaitPointerEventScope {
+                awaitPointerEvent()
+                lastInteractionTime = System.currentTimeMillis()
+            }
+        }
+    }
+    LaunchedEffect(lastInteractionTime) {
+        delay(60_000)
+        val currentTime = System.currentTimeMillis()
+        if (currentTime - lastInteractionTime > 60_000) {
+            petModel.restPet()
+        }
+    }
+
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .then(interactionModifier)
+            .padding(16.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        StatusBarsColumn(
+            mood = petModel.pet?.mood ?: 0,
+            energy = petModel.pet?.energy ?: 0,
+            hunger = petModel.pet?.hunger ?: 0
+        )
+
+        Box(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(innerPadding),
-            horizontalAlignment = Alignment.CenterHorizontally
+                .padding(vertical = 8.dp)
+                .border(
+                    width = 2.dp,
+                    color = MaterialTheme.colorScheme.outline,
+                    shape = MaterialTheme.shapes.medium
+                )
         ) {
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(start = 16.dp, end = 16.dp, top = 24.dp, bottom = 16.dp)
-                    .border(
-                        width = 2.dp,
-                        color = MaterialTheme.colorScheme.outline,
-                        shape = MaterialTheme.shapes.medium
-                    ),
-            ) {
-                Text(
-                    text = "StatusBar",
-                    modifier = Modifier
-                        .align(Alignment.CenterHorizontally)
-                        .padding(16.dp)
+
+            if (showDialog) {
+                AlertDialog(
+                    onDismissRequest = { },
+                    title = { Text("Luo lemmikki") },
+                    text = {
+                        Column {
+                            OutlinedTextField(
+                                value = petName,
+                                onValueChange = { petName = it },
+                                label = { Text("Lemmikin nimi") }
+                            )
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Text("Valitse tyyppi")
+                            Row {
+                                listOf("Dog", "Cat", "Turtle").forEach { type ->
+                                    val isSelected = petType == type
+                                    Button(
+                                        onClick = { petType = type },
+                                        modifier = Modifier.padding(4.dp),
+                                        colors = ButtonDefaults.buttonColors(
+                                            containerColor = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surface
+                                        )
+                                    ) {
+                                        Text(type)
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    confirmButton = {
+                        Button(onClick = {
+                            if (petName.isNotBlank() && petType.isNotBlank()) {
+                                petModel.createPet(petName, petType)
+                                showDialog = false
+                            }
+                        }) {
+                            Text("Luo")
+                        }
+                    }
                 )
             }
 
-            Box(
+            Card(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 24.dp)
-                    .border(
-                        width = 2.dp,
-                        color = MaterialTheme.colorScheme.outline,
-                        shape = MaterialTheme.shapes.medium
-                    )
+                    .padding(16.dp),
             ) {
-                Card(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(16.dp)
-                ) {
-                    Text(
-                        text = "Pet",
-                        modifier = Modifier
-                            .align(Alignment.CenterHorizontally)
-                            .padding(16.dp),
-                    )
+                if (petModel.pet != null) {
+                    Column(
+                        modifier = Modifier.fillMaxSize(),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Top
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(8.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Text(
+                                text = petModel.pet!!.name,
+                                style = MaterialTheme.typography.headlineSmall,
+                                modifier = Modifier.padding(top = 8.dp)
+                            )
+                            OutlinedButton(onClick = {
+                                petModel.resetPet()
+                                showDialog = true
+                            }) {
+                                Text("Poista lemmikki")
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Image(
+                            painter = painterResource(id = R.drawable.ic_launcher_foreground),
+                            contentDescription = "Pet Image",
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .padding(16.dp),
+                            contentScale = ContentScale.Crop
+                        )
+                    }
                 }
+            }
+
+            if (petModel.pet != null) {
                 FloatingActionButton(
-                    onClick = { /*TODO*/ },
+                    onClick = { petModel.feedPet() },
                     modifier = Modifier
                         .padding(24.dp)
                         .align(Alignment.BottomEnd)
@@ -92,7 +177,5 @@ fun HomeScreen(navController: NavController) {
 @Preview
 @Composable
 fun HomeScreenPreview() {
-    val NavController = rememberNavController()
     HomeScreen(navController = rememberNavController())
 }
-

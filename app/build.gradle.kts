@@ -40,6 +40,9 @@ android {
 }
 
 dependencies {
+    // Saveable
+    implementation("androidx.datastore:datastore-preferences:1.0.0")
+
     // Navigation
     implementation(libs.androidx.navigation.compose)
 
