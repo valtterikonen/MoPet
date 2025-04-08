@@ -20,18 +20,25 @@ import com.example.mobilepet.models.StatusBarsColumn
 import kotlinx.coroutines.delay
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
+import com.example.mobilepet.components.CustomFloatingActionButton
+import com.example.mobilepet.models.PetAnimations.feedAnimation
+import kotlinx.coroutines.launch
 
 @Composable
-fun HomeScreen(navController: NavController) {
+fun HomeScreen(navController: NavController, snackbarHostState: SnackbarHostState) {
     val petModel: PetModel = viewModel()
 
     var showDialog by remember { mutableStateOf(false) }
     var petName by remember { mutableStateOf("") }
     var petType by remember { mutableStateOf("") }
+    val animate = remember { mutableStateOf(false) }
+    val coroutineScope = rememberCoroutineScope()
+
 
     LaunchedEffect(petModel.pet) {
         showDialog = petModel.pet == null
     }
+
 
     // PET REST TIMER //
     var lastInteractionTime by remember { mutableStateOf(System.currentTimeMillis()) }
@@ -149,33 +156,36 @@ fun HomeScreen(navController: NavController) {
 
                         Spacer(modifier = Modifier.height(8.dp))
                         Image(
-                            painter = painterResource(id = R.drawable.ic_launcher_foreground),
+                            painter = painterResource(id = R.drawable.kissa_crop),
                             contentDescription = "Pet Image",
                             modifier = Modifier
                                 .fillMaxSize()
-                                .padding(16.dp),
-                            contentScale = ContentScale.Crop
+                                .padding(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 32.dp)
+                                .then(feedAnimation(animate.value)),
+                            contentScale = ContentScale.Fit
                         )
                     }
                 }
             }
 
             if (petModel.pet != null) {
-                FloatingActionButton(
-                    onClick = { petModel.feedPet() },
+                Box(
                     modifier = Modifier
-                        .padding(24.dp)
+                        .padding(16.dp)
                         .align(Alignment.BottomEnd)
                 ) {
-                    Text("Feed")
+                    CustomFloatingActionButton(
+                        snackbarHostState = snackbarHostState,
+                        onFeedSuccess = {
+                            animate.value = true
+                            coroutineScope.launch {
+                                delay(1000)
+                                animate.value = false
+                            }
+                        }
+                    )
                 }
             }
         }
     }
-}
-
-@Preview
-@Composable
-fun HomeScreenPreview() {
-    HomeScreen(navController = rememberNavController())
 }

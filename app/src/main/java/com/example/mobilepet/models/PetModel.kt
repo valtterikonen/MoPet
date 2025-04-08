@@ -3,6 +3,7 @@ package com.example.mobilepet.models
 import android.app.Application
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
@@ -11,6 +12,12 @@ import kotlinx.coroutines.flow.first
 import com.example.mobilepet.models.PetPreferences
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.launch
+
+sealed class FeedResult {
+    object Success : FeedResult()
+    data class TooEarly(val remainingTimeMs: Long) : FeedResult()
+}
+
 
 class PetModel(application: Application) : AndroidViewModel(application) {
 
@@ -61,30 +68,34 @@ class PetModel(application: Application) : AndroidViewModel(application) {
     }
 
 
-    fun feedPet() {
+    fun feedPet(): FeedResult {
         val now = System.currentTimeMillis()
-        val timeSinceLastFeed = now - lastFeedTime
+        val timeSinceLastFeed = lastFeedTime
+        val timeSinceLastFeedMs = now - timeSinceLastFeed
 
-        if (timeSinceLastFeed < 30_000) return
+        if (timeSinceLastFeedMs < 30_000) {
+            val remaining = 30_000 - timeSinceLastFeedMs
+            return FeedResult.TooEarly(remaining)
+        }
 
         pet?.let {
             pet = it.copy(
                 hunger = (it.hunger - 13).coerceAtLeast(0),
-                mood = (it.mood + 1).coerceAtMost(100),
+                mood = (it.mood + 17).coerceAtMost(100),
                 energy = (it.energy + 12).coerceAtMost(100)
             )
 
             lastFeedTime = now
 
             viewModelScope.launch {
-                pet?.let { updatedPet ->
-                    prefs.saveStats(updatedPet.mood, updatedPet.energy, updatedPet.hunger)
-                    prefs.saveFeedTimestamp(now)
-                }
+                prefs.saveStats(pet!!.mood, pet!!.energy, pet!!.hunger)
+                prefs.saveFeedTimestamp(now)
             }
         }
-
+        return FeedResult.Success
     }
+
+
 
     fun exercisePet() {
 
