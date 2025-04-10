@@ -1,5 +1,6 @@
 package com.example.mobilepet.screens
 
+import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
@@ -33,6 +34,7 @@ fun HomeScreen(navController: NavController, snackbarHostState: SnackbarHostStat
     var petType by remember { mutableStateOf("") }
     val animate = remember { mutableStateOf(false) }
     val coroutineScope = rememberCoroutineScope()
+    var animateFeed by remember { mutableStateOf(false) }
 
 
     LaunchedEffect(petModel.pet) {
@@ -55,6 +57,7 @@ fun HomeScreen(navController: NavController, snackbarHostState: SnackbarHostStat
         val currentTime = System.currentTimeMillis()
         if (currentTime - lastInteractionTime > 60_000) {
             petModel.restPet()
+            lastInteractionTime = System.currentTimeMillis()
         }
     }
 
@@ -150,20 +153,24 @@ fun HomeScreen(navController: NavController, snackbarHostState: SnackbarHostStat
                                 petModel.resetPet()
                                 showDialog = true
                             }) {
-                                Text("Poista lemmikki")
+                                Text("Delete Pet")
                             }
                         }
 
                         Spacer(modifier = Modifier.height(8.dp))
-                        Image(
-                            painter = painterResource(id = R.drawable.kissa_crop),
-                            contentDescription = "Pet Image",
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .padding(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 32.dp)
-                                .then(feedAnimation(animate.value)),
-                            contentScale = ContentScale.Fit
-                        )
+                        if (petModel.pet != null) {
+                            feedAnimation(shouldAnimate = animateFeed) { animatedModifier ->
+                                Image(
+                                    painter = painterResource(id = R.drawable.kissa_crop),
+                                    contentDescription = "Pet Image",
+                                    modifier = animatedModifier
+                                        .fillMaxSize()
+                                        .padding(16.dp),
+                                    contentScale = ContentScale.Fit
+                                )
+                            }
+                        }
+
                     }
                 }
             }
@@ -182,6 +189,9 @@ fun HomeScreen(navController: NavController, snackbarHostState: SnackbarHostStat
                                 delay(1000)
                                 animate.value = false
                             }
+                        },
+                        triggerAnimation = {
+                            animateFeed = true
                         }
                     )
                 }

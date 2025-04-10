@@ -15,53 +15,64 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 
 
 object PetAnimations {
 
     @Composable
-    fun feedAnimation(shouldAnimate: Boolean): Modifier {
-        val offsetY by animateDpAsState(
-            targetValue = if (shouldAnimate) (-20).dp else 0.dp,
-            animationSpec = tween(durationMillis = 300)
-        )
-        return Modifier.offset(y = offsetY)
-    }
-
-
-    @Composable
-    fun flipWithJumpAnimation(shouldAnimate: Boolean): Modifier {
-
-        val rotationProgress = remember { Animatable(0f) }
-        val coroutineScope = rememberCoroutineScope()
+    fun feedAnimation(shouldAnimate: Boolean, content: @Composable (Modifier) -> Unit) {
+        val offsetY = remember { Animatable(0f) }
+        val offsetX = remember { Animatable(0f) }
 
         LaunchedEffect(shouldAnimate) {
             if (shouldAnimate) {
-                rotationProgress.snapTo(0f)
-                rotationProgress.animateTo(
-                    targetValue = 1f,
+                repeat(3) {
+                    offsetY.animateTo(-20f, animationSpec = tween(150))
+                    offsetY.animateTo(0f, animationSpec = tween(150))
+                }
+            }
+        }
+        content(
+            Modifier.offset(x=offsetX.value.dp, y = offsetY.value.dp)
+        )
+    }
+
+/*
+    @Composable
+    fun flipWithJumpAnimation(shouldAnimate: Boolean): Modifier {
+        val angleProgress = remember { Animatable(0f) }
+        val density = LocalDensity.current
+
+        LaunchedEffect(shouldAnimate) {
+            if (shouldAnimate) {
+                angleProgress.snapTo(0f)
+                angleProgress.animateTo(
+                    targetValue = 360f,
                     animationSpec = tween(durationMillis = 1000)
                 )
             }
         }
 
-        val rotationX = 360f * rotationProgress.value
-        val rotationY = 360f * rotationProgress.value
-        val offsetY = (-40 * kotlin.math.sin(Math.PI * rotationProgress.value)).dp
+        val radiusDp = 60.dp
+        val angleDeg = angleProgress.value
+        val angleRad = Math.toRadians(angleDeg.toDouble())
 
-        val density = LocalDensity.current.density
+        val offsetX: Dp
+        val offsetY: Dp
+
+        with(density) {
+            val radiusPx = radiusDp.toPx()
+            offsetX = (radiusPx * kotlin.math.cos(angleRad)).toFloat().toDp()
+            offsetY = -(radiusPx * kotlin.math.sin(angleRad)).toFloat().toDp()
+        }
 
         return Modifier
             .graphicsLayer {
-                this.rotationX = rotationX
-                this.rotationY = rotationY
-                cameraDistance = 16f * density
                 transformOrigin = androidx.compose.ui.graphics.TransformOrigin.Center
             }
-            .offset(y = offsetY)
+            .offset(x = offsetX, y = offsetY)
     }
-
-
-
+*/
 }
