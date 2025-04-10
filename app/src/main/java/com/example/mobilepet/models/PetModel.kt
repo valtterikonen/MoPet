@@ -105,7 +105,7 @@ class PetModel(application: Application) : AndroidViewModel(application) {
              pet = it.copy(
                 hunger = (it.hunger + 10).coerceAtMost(100),
                 mood = (it.mood - 7).coerceAtLeast(0),
-                energy = (it.energy + -10).coerceAtMost(100)
+                energy = (it.energy + 13).coerceAtMost(100)
             )
 
             viewModelScope.launch {

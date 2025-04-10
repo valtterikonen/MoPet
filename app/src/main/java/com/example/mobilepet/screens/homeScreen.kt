@@ -41,7 +41,6 @@ fun HomeScreen(navController: NavController, snackbarHostState: SnackbarHostStat
         showDialog = petModel.pet == null
     }
 
-
     // PET REST TIMER //
     var lastInteractionTime by remember { mutableStateOf(System.currentTimeMillis()) }
     val interactionModifier = Modifier.pointerInput(Unit) {

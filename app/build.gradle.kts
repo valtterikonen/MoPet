@@ -30,6 +30,7 @@ android {
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
+        isCoreLibraryDesugaringEnabled = true
     }
     kotlinOptions {
         jvmTarget = "11"
@@ -49,6 +50,8 @@ dependencies {
     // UI elements
 
     // AR dependencies (Google earth)
+    implementation("earth.worldwind:worldwind:1.7.3")
+    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.5")
 
 
     implementation(libs.androidx.core.ktx)
