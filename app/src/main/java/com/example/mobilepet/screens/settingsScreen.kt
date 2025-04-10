@@ -13,26 +13,42 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.example.mobilepet.navigation.BottomNavigationBar
+import androidx.compose.runtime.saveable.rememberSaveable
+
+
+@Composable
+fun DynamicTheme(content: @Composable (MutableState<Boolean>) -> Unit) {
+    val isLightTheme = rememberSaveable { mutableStateOf(true) }
+
+    val colors = if (isLightTheme.value) lightColorScheme() else darkColorScheme()
+
+    MaterialTheme(colorScheme = colors) {
+        content(isLightTheme)
+    }
+}
 
 @Composable
 fun SettingsScreen(navController: NavController) {
-    var soundEnabled by remember { mutableStateOf(true) }
-    var isLightTheme by remember { mutableStateOf(true) }
-
-
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp),
-        verticalArrangement = Arrangement.SpaceBetween
-    ) {
+    DynamicTheme { isLightTheme ->
         Column(
-            modifier = Modifier.weight(1f),
-            verticalArrangement = Arrangement.Center
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(16.dp),
+            verticalArrangement = Arrangement.SpaceBetween
         ) {
-            SettingItem(label = "Äänet", state = soundEnabled, onText = "ON", offText = "OFF") { soundEnabled = it }
-            Spacer(modifier = Modifier.height(16.dp))
-            SettingItem(label = "Teema", state = isLightTheme, onText = "LIGHT", offText = "DARK") { isLightTheme = it }
+            Column(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.Center
+            ) {
+                var soundEnabled by rememberSaveable { mutableStateOf(true) }
+
+                SettingItem("Äänet", soundEnabled, "ON", "OFF") { soundEnabled = it }
+                Spacer(modifier = Modifier.height(16.dp))
+                SettingItem("Teema", isLightTheme.value, "LIGHT", "DARK") { newTheme ->
+                    isLightTheme.value = newTheme // Apply theme change dynamically
+                }
+            }
+            BottomNavigationBar(navController)
         }
     }
 }
