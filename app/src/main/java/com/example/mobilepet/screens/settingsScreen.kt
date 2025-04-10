@@ -19,6 +19,7 @@ fun SettingsScreen(navController: NavController) {
     var soundEnabled by remember { mutableStateOf(true) }
     var isLightTheme by remember { mutableStateOf(true) }
 
+
     Column(
         modifier = Modifier
             .fillMaxSize()
