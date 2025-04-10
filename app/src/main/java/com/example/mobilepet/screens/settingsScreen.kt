@@ -45,7 +45,7 @@ fun SettingsScreen(navController: NavController) {
                 SettingItem("Äänet", soundEnabled, "ON", "OFF") { soundEnabled = it }
                 Spacer(modifier = Modifier.height(16.dp))
                 SettingItem("Teema", isLightTheme.value, "LIGHT", "DARK") { newTheme ->
-                    isLightTheme.value = newTheme // Apply theme change dynamically
+                    isLightTheme.value = newTheme
                 }
             }
             BottomNavigationBar(navController)
