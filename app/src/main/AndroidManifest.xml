@@ -16,6 +16,8 @@
         android:theme="@style/Theme.MobilePet"
         tools:targetApi="31">
 
+
+
         <activity
             android:name=".MainActivity"
             android:exported="true"
