@@ -12,43 +12,28 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
-import com.example.mobilepet.navigation.BottomNavigationBar
 import androidx.compose.runtime.saveable.rememberSaveable
-
-
-@Composable
-fun DynamicTheme(content: @Composable (MutableState<Boolean>) -> Unit) {
-    val isLightTheme = rememberSaveable { mutableStateOf(true) }
-
-    val colors = if (isLightTheme.value) lightColorScheme() else darkColorScheme()
-
-    MaterialTheme(colorScheme = colors) {
-        content(isLightTheme)
-    }
-}
+import com.example.mobilepet.navigation.BottomNavigationBar
 
 @Composable
-fun SettingsScreen(navController: NavController) {
-    DynamicTheme { isLightTheme ->
+fun SettingsScreen(navController: NavController, isLightTheme: MutableState<Boolean>) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp),
+        verticalArrangement = Arrangement.SpaceBetween
+    ) {
         Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(16.dp),
-            verticalArrangement = Arrangement.SpaceBetween
+            modifier = Modifier.weight(1f),
+            verticalArrangement = Arrangement.Center
         ) {
-            Column(
-                modifier = Modifier.weight(1f),
-                verticalArrangement = Arrangement.Center
-            ) {
-                var soundEnabled by rememberSaveable { mutableStateOf(true) }
+            var soundEnabled by rememberSaveable { mutableStateOf(true) }
 
-                SettingItem("Äänet", soundEnabled, "ON", "OFF") { soundEnabled = it }
-                Spacer(modifier = Modifier.height(16.dp))
-                SettingItem("Teema", isLightTheme.value, "LIGHT", "DARK") { newTheme ->
-                    isLightTheme.value = newTheme
-                }
+            SettingItem("Äänet", soundEnabled, "ON", "OFF") { soundEnabled = it }
+            Spacer(modifier = Modifier.height(16.dp))
+            SettingItem("Teema", isLightTheme.value, "LIGHT", "DARK") { newTheme ->
+                isLightTheme.value = newTheme
             }
-            BottomNavigationBar(navController)
         }
     }
 }
@@ -78,5 +63,6 @@ fun SettingItem(label: String, state: Boolean, onText: String, offText: String, 
 @Preview(showBackground = true)
 @Composable
 fun SettingsScreenPreview() {
-    SettingsScreen(navController = rememberNavController())
+    val isLightTheme = remember { mutableStateOf(true) }
+    SettingsScreen(navController = rememberNavController(), isLightTheme)
 }
