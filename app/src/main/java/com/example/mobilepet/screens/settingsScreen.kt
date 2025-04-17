@@ -12,14 +12,11 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
+import androidx.compose.runtime.saveable.rememberSaveable
 import com.example.mobilepet.navigation.BottomNavigationBar
 
 @Composable
-fun SettingsScreen(navController: NavController) {
-    var soundEnabled by remember { mutableStateOf(true) }
-    var isLightTheme by remember { mutableStateOf(true) }
-
-
+fun SettingsScreen(navController: NavController, isLightTheme: MutableState<Boolean>) {
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -30,9 +27,13 @@ fun SettingsScreen(navController: NavController) {
             modifier = Modifier.weight(1f),
             verticalArrangement = Arrangement.Center
         ) {
-            SettingItem(label = "Äänet", state = soundEnabled, onText = "ON", offText = "OFF") { soundEnabled = it }
+            var soundEnabled by rememberSaveable { mutableStateOf(true) }
+
+            SettingItem("Äänet", soundEnabled, "ON", "OFF") { soundEnabled = it }
             Spacer(modifier = Modifier.height(16.dp))
-            SettingItem(label = "Teema", state = isLightTheme, onText = "LIGHT", offText = "DARK") { isLightTheme = it }
+            SettingItem("Teema", isLightTheme.value, "LIGHT", "DARK") { newTheme ->
+                isLightTheme.value = newTheme
+            }
         }
     }
 }
@@ -62,5 +63,6 @@ fun SettingItem(label: String, state: Boolean, onText: String, offText: String, 
 @Preview(showBackground = true)
 @Composable
 fun SettingsScreenPreview() {
-    SettingsScreen(navController = rememberNavController())
+    val isLightTheme = remember { mutableStateOf(true) }
+    SettingsScreen(navController = rememberNavController(), isLightTheme)
 }

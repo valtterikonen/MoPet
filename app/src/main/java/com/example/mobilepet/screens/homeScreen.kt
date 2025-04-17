@@ -1,6 +1,5 @@
 package com.example.mobilepet.screens
 
-import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
@@ -8,21 +7,19 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavController
 import com.example.mobilepet.R
+import com.example.mobilepet.components.CustomFloatingActionButton
+import com.example.mobilepet.models.PetAnimations.feedAnimation
 import com.example.mobilepet.models.PetModel
 import com.example.mobilepet.models.StatusBarsColumn
 import kotlinx.coroutines.delay
-import androidx.navigation.NavController
-import androidx.navigation.compose.rememberNavController
-import com.example.mobilepet.components.CustomFloatingActionButton
-import com.example.mobilepet.models.PetAnimations.feedAnimation
 import kotlinx.coroutines.launch
 
 @Composable
@@ -33,15 +30,16 @@ fun HomeScreen(navController: NavController, snackbarHostState: SnackbarHostStat
     var petName by remember { mutableStateOf("") }
     var petType by remember { mutableStateOf("") }
     val animate = remember { mutableStateOf(false) }
-    val coroutineScope = rememberCoroutineScope()
     var animateFeed by remember { mutableStateOf(false) }
-
+    var animateFlip by remember { mutableStateOf(false) }
+    val coroutineScope = rememberCoroutineScope()
+    var showDeleteDialog by remember { mutableStateOf(false) }
 
     LaunchedEffect(petModel.pet) {
         showDialog = petModel.pet == null
     }
 
-    // PET REST TIMER //
+    // REST TIMER
     var lastInteractionTime by remember { mutableStateOf(System.currentTimeMillis()) }
     val interactionModifier = Modifier.pointerInput(Unit) {
         while (true) {
@@ -52,9 +50,9 @@ fun HomeScreen(navController: NavController, snackbarHostState: SnackbarHostStat
         }
     }
     LaunchedEffect(lastInteractionTime) {
-        delay(60_000)
+        delay(120_000)
         val currentTime = System.currentTimeMillis()
-        if (currentTime - lastInteractionTime > 60_000) {
+        if (currentTime - lastInteractionTime > 120_000) {
             petModel.restPet()
             lastInteractionTime = System.currentTimeMillis()
         }
@@ -72,39 +70,29 @@ fun HomeScreen(navController: NavController, snackbarHostState: SnackbarHostStat
             energy = petModel.pet?.energy ?: 0,
             hunger = petModel.pet?.hunger ?: 0
         )
-
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(vertical = 8.dp)
-                .border(
-                    width = 2.dp,
-                    color = MaterialTheme.colorScheme.outline,
-                    shape = MaterialTheme.shapes.medium
-                )
-        ) {
-
+        Box(modifier = Modifier.fillMaxSize()) {
             if (showDialog) {
                 AlertDialog(
                     onDismissRequest = { },
-                    title = { Text("Luo lemmikki") },
+                    title = { Text("Create Pet") },
                     text = {
                         Column {
                             OutlinedTextField(
                                 value = petName,
                                 onValueChange = { petName = it },
-                                label = { Text("Lemmikin nimi") }
+                                label = { Text("Name") }
                             )
                             Spacer(modifier = Modifier.height(8.dp))
-                            Text("Valitse tyyppi")
+                            Text("Type")
                             Row {
-                                listOf("Dog", "Cat", "Turtle").forEach { type ->
+                                listOf("Dog", "Cat", "Hedgehog").forEach { type ->
                                     val isSelected = petType == type
                                     Button(
                                         onClick = { petType = type },
-                                        modifier = Modifier.padding(4.dp),
+                                        modifier = Modifier.weight(1f).padding(4.dp),
                                         colors = ButtonDefaults.buttonColors(
-                                            containerColor = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surface
+                                            containerColor = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant,
+                                            contentColor = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant
                                         )
                                     ) {
                                         Text(type)
@@ -120,7 +108,7 @@ fun HomeScreen(navController: NavController, snackbarHostState: SnackbarHostStat
                                 showDialog = false
                             }
                         }) {
-                            Text("Luo")
+                            Text("Create")
                         }
                     }
                 )
@@ -149,27 +137,33 @@ fun HomeScreen(navController: NavController, snackbarHostState: SnackbarHostStat
                                 modifier = Modifier.padding(top = 8.dp)
                             )
                             OutlinedButton(onClick = {
-                                petModel.resetPet()
-                                showDialog = true
+                                showDeleteDialog = true
                             }) {
-                                Text("Delete Pet")
+                                Text("Execute ${petModel.pet!!.name}")
                             }
-                        }
-
-                        Spacer(modifier = Modifier.height(8.dp))
-                        if (petModel.pet != null) {
-                            feedAnimation(shouldAnimate = animateFeed) { animatedModifier ->
-                                Image(
-                                    painter = painterResource(id = R.drawable.kissa_crop),
-                                    contentDescription = "Pet Image",
-                                    modifier = animatedModifier
-                                        .fillMaxSize()
-                                        .padding(16.dp),
-                                    contentScale = ContentScale.Fit
+                            if (showDeleteDialog) {
+                                AlertDialog(
+                                    onDismissRequest = { showDeleteDialog = false },
+                                    title = { Text("Execute Pet") },
+                                    text = { Text("Confirm executing your pet ${petModel.pet!!.name}?") },
+                                    confirmButton = {
+                                        Button(onClick = {
+                                            petModel.resetPet()
+                                            showDeleteDialog = false
+                                        }) {
+                                            Text("Execute \uD83D\uDE22\uD83D\uDC94")
+                                        }
+                                    },
+                                    dismissButton = {
+                                        OutlinedButton(onClick = { showDeleteDialog = false }) {
+                                            Text("Cancel \uD83D\uDE42")
+                                        }
+                                    }
                                 )
                             }
                         }
 
+                        Spacer(modifier = Modifier.height(8.dp))
                     }
                 }
             }
@@ -177,7 +171,7 @@ fun HomeScreen(navController: NavController, snackbarHostState: SnackbarHostStat
             if (petModel.pet != null) {
                 Box(
                     modifier = Modifier
-                        .padding(16.dp)
+                        .padding(8.dp)
                         .align(Alignment.BottomEnd)
                 ) {
                     CustomFloatingActionButton(
@@ -191,8 +185,67 @@ fun HomeScreen(navController: NavController, snackbarHostState: SnackbarHostStat
                         },
                         triggerAnimation = {
                             animateFeed = true
+                            coroutineScope.launch {
+                                delay(1000)
+                                animateFeed = false
+                            }
                         }
                     )
+                }
+                if (petModel.pet != null && petModel.pet?.type == "Dog") {
+                    feedAnimation(shouldAnimate = animateFeed) { animateModifier ->
+                        Image(
+                            painter = painterResource(id = R.drawable.dog_crop),
+                            contentDescription = "Dog",
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .padding(16.dp)
+                                .graphicsLayer(
+                                    translationX = 0f,
+                                    translationY = 0f,
+                                    scaleX = 1f,
+                                    scaleY = 1f
+                                )
+                                .then(animateModifier),
+                            contentScale = ContentScale.Fit
+                        )
+                    }
+                } else if (petModel.pet != null && petModel.pet?.type == "Cat") {
+                    feedAnimation(shouldAnimate = animateFeed) { animateModifier ->
+                        Image(
+                            painter = painterResource(id = R.drawable.kissa_crop),
+                            contentDescription = "Cat",
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .padding(16.dp)
+                                .graphicsLayer(
+                                    translationX = 0f,
+                                    translationY = 0f,
+                                    scaleX = 1f,
+                                    scaleY = 1f
+                                )
+                                .then(animateModifier),
+                            contentScale = ContentScale.Fit
+                        )
+                    }
+                } else if (petModel.pet != null && petModel.pet?.type == "Hedgehog") {
+                    feedAnimation(shouldAnimate = animateFeed) { animateModifier ->
+                        Image(
+                            painter = painterResource(id = R.drawable.siili_crop),
+                            contentDescription = "Hedgehog",
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .padding(16.dp)
+                                .graphicsLayer(
+                                    translationX = 0f,
+                                    translationY = 0f,
+                                    scaleX = 1f,
+                                    scaleY = 1f
+                                )
+                                .then(animateModifier),
+                            contentScale = ContentScale.Fit
+                        )
+                    }
                 }
             }
         }

@@ -1,6 +1,10 @@
 package com.example.mobilepet.screens
 
 import android.content.Context
+import android.hardware.Sensor
+import android.hardware.SensorEvent
+import android.hardware.SensorEventListener
+import android.hardware.SensorManager
 import android.os.Bundle
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
@@ -10,11 +14,14 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Card
 import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SegmentedButtonDefaults.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.getValue
@@ -37,6 +44,7 @@ import earth.worldwind.layer.BlueMarbleLayer
 import earth.worldwind.layer.RenderableLayer
 import earth.worldwind.shape.Path
 import earth.worldwind.shape.PathType
+import kotlinx.coroutines.*
 import kotlin.random.Random
 
 
@@ -45,7 +53,29 @@ fun ExerciseScreen(navController: NavController) {
     val context = LocalContext.current
     val worldWindow = remember { createWorldWindow(context) }
     var showTrajectory by remember { mutableStateOf(false) }
+    var currentSteps by remember { mutableStateOf(0) }
+    val goalSteps = 10000 // Example goal steps
 
+    DisposableEffect(Unit) {
+        val sensorManager = context.getSystemService(Context.SENSOR_SERVICE) as SensorManager
+        val stepSensor = sensorManager.getDefaultSensor(Sensor.TYPE_STEP_COUNTER)
+        val stepListener = object : SensorEventListener {
+            override fun onSensorChanged(event: SensorEvent?) {
+                if (event != null) {
+                    currentSteps = event.values[0].toInt() // Update steps
+                }
+            }
+            override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) {}
+        }
+
+        if (stepSensor != null) {
+            sensorManager.registerListener(stepListener, stepSensor, SensorManager.SENSOR_DELAY_UI)
+        }
+
+        onDispose {
+            sensorManager.unregisterListener(stepListener)
+        }
+    }
     Scaffold(
         floatingActionButton = {
             FloatingActionButton(
@@ -53,7 +83,10 @@ fun ExerciseScreen(navController: NavController) {
                 modifier = Modifier
                     .padding(16.dp)
             ) {
-
+                Text(
+                    text = "Exercise",
+                    color = Color.White
+                )
             }
         }
 
@@ -74,12 +107,21 @@ fun ExerciseScreen(navController: NavController) {
                         shape = MaterialTheme.shapes.medium
                     )
             ) {
-                Text(
-                    text = "Status Bar",
-                    modifier = Modifier
-                        .padding(16.dp)
-                        .align(Alignment.CenterHorizontally)
-                )
+                Column(
+                    modifier = Modifier.padding(16.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text(
+                        text = "Steps: $currentSteps / $goalSteps",
+                        style = MaterialTheme.typography.bodyLarge
+                    )
+                    LinearProgressIndicator(
+                        progress = currentSteps / goalSteps.toFloat(),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(top = 8.dp)
+                    )
+                }
             }
 
             // Globe rendering
@@ -96,14 +138,14 @@ fun ExerciseScreen(navController: NavController) {
 // Luo WorldWindow-objektin
 fun createWorldWindow(context: Context): WorldWindow {
     val worldWindow = WorldWindow(context)
-    worldWindow.engine.layers.addLayer(BlueMarbleLayer()) // Add a basic globe layer
+    worldWindow.engine.layers.addLayer(BlueMarbleLayer()) // Lisää taustakerroksen
     return worldWindow
 }
 
-//Generoi kolme satunnaista sijaintia
+//Lisää reittikerroksen
 fun addTrajectoryLayer(worldWindow: WorldWindow) {
-    val layer = RenderableLayer()
-    val positions = generateRandomPositions(3)
+    val layer = RenderableLayer() // Luo uuden kerroksen
+    val positions = generateRandomPositions(3) // Satunnaisten sijaintien määrä
     val path = Path(positions).apply {
         isFollowTerrain = true
         pathType = PathType.LINEAR
@@ -111,16 +153,50 @@ fun addTrajectoryLayer(worldWindow: WorldWindow) {
     }
     layer.addRenderable(path)
     worldWindow.engine.layers.addLayer(layer)
+
+    val startingPoint = positions.first() //luodaan ensimmäinen sijainti
+    val camera = worldWindow.engine.camera // Haetaan kamera
+
+    // Animoitu kamera liikkumaan satunnaiseen sijaintiin
+    CoroutineScope(Dispatchers.Main).launch {
+        val startLatitude = camera.position.latitude
+        val startLongitude = camera.position.longitude
+        val startAltitude = camera.position.altitude
+        val endLatitude = startingPoint.latitude
+        val endLongitude = startingPoint.longitude
+        val endAltitude = 10000000.0 // Oletettu loppukorkeus
+        val duration = 2000L // Animaation kestoaika (2 sekuntia)
+        val steps = 60 // Animaation vaiheet
+        val delayTime = duration / steps
+
+        for (i in 1..steps) {
+            val fraction = i / steps.toFloat()
+            camera.position.latitude = startLatitude + (endLatitude - startLatitude) * fraction
+            camera.position.longitude = startLongitude + (endLongitude - startLongitude) * fraction
+            camera.position.altitude = startAltitude + (endAltitude - startAltitude) * fraction
+            worldWindow.requestRedraw()
+            delay(delayTime)
+        }
+    }
 }
 
-//Generoi satunnaisia sijainteja
+//Asettaa satunnaiset sijainnit listan paikkojen väliltä
 fun generateRandomPositions(count: Int): List<Position> {
+    val countryCoordinates = listOf(
+        Position.fromDegrees(60.0, 24.0, 0.0), // Helsinki, Finland
+        Position.fromDegrees(48.8566, 2.3522, 0.0), // Paris, France
+        Position.fromDegrees(51.5074, -0.1278, 0.0), // London, UK
+        Position.fromDegrees(40.7128, -74.0060, 0.0), // New York, USA
+        Position.fromDegrees(35.6895, 139.6917, 0.0), // Tokyo, Japan
+        Position.fromDegrees(-33.8688, 151.2093, 0.0), // Sydney, Australia
+        Position.fromDegrees(-23.5505, -46.6333, 0.0), // São Paulo, Brazil
+        Position.fromDegrees(55.7558, 37.6173, 0.0), // Moscow, Russia
+        Position.fromDegrees(39.9042, 116.4074, 0.0), // Beijing, China
+        Position.fromDegrees(1.3521, 103.8198, 0.0) // Singapore
+
+    )
     return List(count) {
-        Position.fromDegrees(
-            Random.nextDouble(-90.0, 90.0), // Random latitude
-            Random.nextDouble(-180.0, 180.0), // Random longitude
-            0.0 // Altitude
-        )
+        countryCoordinates.random() // Satunnainen sijainti listasta
     }
 }
 
