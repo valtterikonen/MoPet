@@ -122,6 +122,8 @@ class PetModel(application: Application) : AndroidViewModel(application) {
     fun resetPet() {
         pet = null
         viewModelScope.launch {
+            val entity = com.example.mobilepet.database.Pet(name = "", type = "")
+            petDao.deletePet(entity)
             prefs.saveStats(25, 40, 50)
             prefs.saveNameAndType("", "")
             prefs.saveFeedTimestamp(0L)
