@@ -1,6 +1,7 @@
 package com.example.mobilepet.models
 
 import android.app.Application
+import android.util.Log
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.rememberCoroutineScope
@@ -8,6 +9,7 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.mobilepet.components.Pet
+import com.example.mobilepet.database.getDatabase
 import kotlinx.coroutines.flow.first
 import com.example.mobilepet.models.PetPreferences
 import kotlinx.coroutines.flow.firstOrNull
@@ -22,6 +24,8 @@ sealed class FeedResult {
 class PetModel(application: Application) : AndroidViewModel(application) {
 
     private val prefs = PetPreferences(application.applicationContext)
+    private val db = getDatabase(getApplication())
+    private val petDao = db.petDao()
 
     var pet: Pet? by mutableStateOf(null)
         private set
@@ -62,6 +66,8 @@ class PetModel(application: Application) : AndroidViewModel(application) {
         )
 
         viewModelScope.launch {
+            val entity = com.example.mobilepet.database.Pet(name = name, type = type)
+            petDao.insertPet(entity)
             prefs.saveStats(pet!!.mood, pet!!.energy, pet!!.hunger)
             prefs.saveNameAndType(name, type)
         }
