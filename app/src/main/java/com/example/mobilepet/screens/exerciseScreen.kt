@@ -46,6 +46,7 @@ fun ExerciseScreen() {
     val positions = remember { generateRandomPositions(3) }
     val marker = remember { createMarker(positions.first()) }
 
+    // Sennsorin kuuntelija askelien laskemiseen
     DisposableEffect(Unit) {
         val sensorManager = context.getSystemService(Context.SENSOR_SERVICE) as SensorManager
         val accelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER)
@@ -54,6 +55,7 @@ fun ExerciseScreen() {
         val stepThreshold = 1f
         var lastStepTime = 0L
 
+        // SensorEventListener askelien laskemiseen
         val stepListener = object : SensorEventListener {
             override fun onSensorChanged(event: SensorEvent?) {
                 if (event == null || !isExercising) return
@@ -86,10 +88,12 @@ fun ExerciseScreen() {
             override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) {}
         }
 
+        // Rekisteröidään sensorin kuuntelija
         if (accelerometer != null) {
             sensorManager.registerListener(stepListener, accelerometer, SensorManager.SENSOR_DELAY_UI)
         }
 
+        // Poistetaan kuuntelija kun komponentti tuhotaan
         onDispose {
             sensorManager.unregisterListener(stepListener)
         }
