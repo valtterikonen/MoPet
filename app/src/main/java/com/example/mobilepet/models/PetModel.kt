@@ -3,13 +3,11 @@ package com.example.mobilepet.models
 import android.app.Application
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.mobilepet.components.Pet
 import kotlinx.coroutines.flow.first
-import com.example.mobilepet.models.PetPreferences
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.launch
 
@@ -98,6 +96,17 @@ class PetModel(application: Application) : AndroidViewModel(application) {
 
 
     fun exercisePet() {
+        pet?.let {
+            pet = it.copy(
+                hunger = (it.hunger + 20).coerceAtMost(100),
+                mood = (it.mood + 12).coerceAtMost(100),
+                energy = (it.energy - 30).coerceAtLeast(0)
+            )
+
+            viewModelScope.launch {
+                prefs.saveStats(pet!!.mood, pet!!.energy, pet!!.hunger)
+            }
+        }
 
     }
         fun restPet() {
