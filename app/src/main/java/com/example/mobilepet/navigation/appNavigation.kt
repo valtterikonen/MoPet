@@ -64,5 +64,16 @@ fun AppNavigation(isLightTheme: MutableState<Boolean>) { // Pass the theme state
                 }
             }
         }
+
+        composable("gallery") {
+            Scaffold(
+                containerColor = MaterialTheme.colorScheme.background
+            ) { innerPadding ->
+                Column(modifier = Modifier.padding(innerPadding)) {
+                    Text("gallery")
+                }
+            }
+        }
+
     }
 }

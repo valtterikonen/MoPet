@@ -100,12 +100,21 @@ class PetModel(application: Application) : AndroidViewModel(application) {
         return FeedResult.Success
     }
 
-
-
     fun exercisePet() {
+        pet?.let {
+            pet = it.copy(
+                hunger = (it.hunger + 20).coerceAtMost(100),
+                mood = (it.mood + 12).coerceAtMost(100),
+                energy = (it.energy - 30).coerceAtLeast(0)
+            )
 
+            viewModelScope.launch {
+                prefs.saveStats(pet!!.mood, pet!!.energy, pet!!.hunger)
+            }
+        }
     }
-        fun restPet() {
+
+    fun restPet() {
             pet?.let {
              pet = it.copy(
                 hunger = (it.hunger + 10).coerceAtMost(100),

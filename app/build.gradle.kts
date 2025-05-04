@@ -48,8 +48,6 @@ dependencies {
     // Navigation
     implementation(libs.androidx.navigation.compose)
 
-    // UI elements
-
     // AR dependencies (Google earth)
     implementation("earth.worldwind:worldwind:1.7.3")
     coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.5")
@@ -65,6 +63,7 @@ dependencies {
     implementation("androidx.camera:camera-camera2:1.3.0")
     implementation("androidx.camera:camera-lifecycle:1.3.0")
     implementation("androidx.camera:camera-view:1.3.0")
+    implementation ("io.coil-kt:coil-compose:2.2.2")
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
