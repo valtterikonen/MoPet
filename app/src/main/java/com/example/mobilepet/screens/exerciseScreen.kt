@@ -5,9 +5,7 @@ import android.hardware.Sensor
 import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
 import android.hardware.SensorManager
-import android.os.Bundle
 import androidx.compose.foundation.border
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -17,20 +15,16 @@ import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SegmentedButtonDefaults.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
@@ -44,8 +38,11 @@ import earth.worldwind.layer.BlueMarbleLayer
 import earth.worldwind.layer.RenderableLayer
 import earth.worldwind.shape.Path
 import earth.worldwind.shape.PathType
+import earth.worldwind.shape.Placemark
+import earth.worldwind.render.Color
+import earth.worldwind.shape.PlacemarkAttributes
 import kotlinx.coroutines.*
-import kotlin.random.Random
+import kotlin.times
 
 
 @Composable
@@ -55,6 +52,8 @@ fun ExerciseScreen(navController: NavController) {
     var showTrajectory by remember { mutableStateOf(false) }
     var currentSteps by remember { mutableStateOf(0) }
     val goalSteps = 10000 // Example goal steps
+    val positions = remember { generateRandomPositions(3) }
+    val marker = remember { createMarker(positions.first()) }
 
     DisposableEffect(Unit) {
         val sensorManager = context.getSystemService(Context.SENSOR_SERVICE) as SensorManager
@@ -63,6 +62,8 @@ fun ExerciseScreen(navController: NavController) {
             override fun onSensorChanged(event: SensorEvent?) {
                 if (event != null) {
                     currentSteps = event.values[0].toInt() // Update steps
+                    updateMarkerPosition(marker, positions, currentSteps, goalSteps)
+                    worldWindow.requestRedraw() // Request redraw to update the marker position
                 }
             }
             override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) {}
@@ -80,13 +81,18 @@ fun ExerciseScreen(navController: NavController) {
         bottomBar = { BottomNavigationBar(navController) },
         floatingActionButton = {
             FloatingActionButton(
-                onClick = { showTrajectory = !showTrajectory },
+                onClick = {
+                    showTrajectory = !showTrajectory
+                    if (showTrajectory)  {
+                        addMarker(worldWindow, marker)
+                    }
+                          },
                 modifier = Modifier
                     .padding(16.dp)
             ) {
             Text(
                 text = "Exercise",
-                color = Color.White
+                color = androidx.compose.ui.graphics.Color.White
             )
             }
         }
@@ -130,7 +136,8 @@ fun ExerciseScreen(navController: NavController) {
 
             // Add trajectory layer if toggled
             if (showTrajectory) {
-                addTrajectoryLayer(worldWindow)
+                addTrajectoryLayer(worldWindow, positions)
+                addMarker(worldWindow, marker)
             }
         }
     }
@@ -144,9 +151,8 @@ fun createWorldWindow(context: Context): WorldWindow {
 }
 
 //Lisää reittikerroksen
-fun addTrajectoryLayer(worldWindow: WorldWindow) {
+fun addTrajectoryLayer(worldWindow: WorldWindow, positions: List<Position>) {
     val layer = RenderableLayer() // Luo uuden kerroksen
-    val positions = generateRandomPositions(3) // Satunnaisten sijaintien määrä
     val path = Path(positions).apply {
         isFollowTerrain = true
         pathType = PathType.LINEAR
@@ -179,6 +185,38 @@ fun addTrajectoryLayer(worldWindow: WorldWindow) {
             delay(delayTime)
         }
     }
+}
+
+fun createMarker(position: Position): Placemark {
+    val attributes = PlacemarkAttributes().apply {
+        imageSource = null // No image, just a box
+
+    }
+
+    return Placemark(position).apply {
+        this.attributes = attributes
+        altitudeMode = AltitudeMode.CLAMP_TO_GROUND
+    }
+}
+
+fun updateMarkerPosition(marker: Placemark, positions: List<Position>, currentSteps: Int, goalSteps: Int) {
+    val progress = (currentSteps.toFloat() / goalSteps).coerceIn(0f, 1f)
+    val segmentCount = positions.size - 1
+    val segmentIndex = (progress * segmentCount).toInt().coerceAtMost(segmentCount - 1)
+    val segmentProgress = (progress * segmentCount) - segmentIndex
+
+    val start = positions[segmentIndex]
+    val end = positions[segmentIndex + 1]
+
+    marker.position.latitude = start.latitude + (end.latitude - start.latitude) * segmentProgress
+    marker.position.longitude = start.longitude + (end.longitude - start.longitude) * segmentProgress
+    marker.position.altitude = start.altitude + (end.altitude - start.altitude) * segmentProgress
+}
+
+fun addMarker(worldWindow: WorldWindow, marker: Placemark) {
+    val layer = RenderableLayer()
+    layer.addRenderable(marker)
+    worldWindow.engine.layers.addLayer(layer)
 }
 
 //Asettaa satunnaiset sijainnit listan paikkojen väliltä
