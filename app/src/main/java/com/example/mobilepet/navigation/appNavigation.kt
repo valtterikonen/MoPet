@@ -8,6 +8,7 @@ import androidx.compose.ui.Modifier
 import androidx.navigation.compose.*
 import com.example.mobilepet.screens.ExerciseScreen
 import com.example.mobilepet.screens.HomeScreen
+import com.example.mobilepet.screens.PetPicture
 import com.example.mobilepet.screens.SettingsScreen
 
 @Composable
@@ -49,7 +50,17 @@ fun AppNavigation(isLightTheme: MutableState<Boolean>) { // Pass the theme state
                 bottomBar = { BottomNavigationBar(navController) }
             ) { innerPadding ->
                 Column(modifier = Modifier.padding(innerPadding)) {
-                    SettingsScreen(navController, isLightTheme) // Pass isLightTheme to SettingsScreen
+                    SettingsScreen(navController, isLightTheme)
+                }
+            }
+        }
+
+        composable("picture") {
+            Scaffold(
+                containerColor = MaterialTheme.colorScheme.background
+            ) { innerPadding ->
+                Column(modifier = Modifier.padding(innerPadding)) {
+                    PetPicture(navController)
                 }
             }
         }

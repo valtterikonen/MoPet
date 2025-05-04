@@ -25,6 +25,7 @@ import androidx.navigation.compose.rememberNavController
 import com.example.mobilepet.R
 import com.example.mobilepet.components.CustomFloatingActionButton
 import com.example.mobilepet.models.PetAnimations.feedAnimation
+import com.example.mobilepet.models.PetAnimations.idleAnimation
 import com.example.mobilepet.models.PetModel
 import com.example.mobilepet.models.StatusBarsColumn
 import kotlinx.coroutines.delay
@@ -119,6 +120,19 @@ fun HomeScreen(navController: NavController, snackbarHostState: SnackbarHostStat
                             energy = petModel.pet?.energy ?: 0,
                             hunger = petModel.pet?.hunger ?: 0
                         )
+                    IconButton (onClick = {
+                        navController.navigate("picture")
+                    }) {
+                        Icon(
+                            painter = painterResource(id = R.drawable.pistol),
+                            contentDescription = "Camera",
+                            modifier = Modifier
+                                .padding(8.dp)
+                                .border(1.dp, MaterialTheme.colorScheme.primary, MaterialTheme.shapes.small)
+                                .shadow(4.dp, shape = MaterialTheme.shapes.small)
+                                .alpha(0.7f)
+                        )
+                    }
                     Spacer(modifier = Modifier.height(16.dp))
                     Box(
                         modifier = Modifier
@@ -205,63 +219,69 @@ fun HomeScreen(navController: NavController, snackbarHostState: SnackbarHostStat
                         }
                         if (petModel.pet != null && petModel.pet?.type == "Dog") {
                             feedAnimation(shouldAnimate = animateFeed) { animateModifier ->
-                                Image(
-                                    painter = painterResource(id = R.drawable.dog_crop),
-                                    contentDescription = "Dog",
-                                    modifier = Modifier
-                                        .fillMaxSize()
-                                        .padding(16.dp)
-                                        .graphicsLayer(
-                                            translationX = 0f,
-                                            translationY = 0f,
-                                            scaleX = 1f,
-                                            scaleY = 1f
-                                        )
-                                        .then(animateModifier),
-                                    contentScale = ContentScale.Fit
-                                )
+                                idleAnimation { idleModifier ->
+                                    Image(
+                                        painter = painterResource(id = R.drawable.dog_crop),
+                                        contentDescription = "Dog",
+                                        modifier = Modifier.then(idleModifier)
+                                            .fillMaxSize()
+                                            .padding(16.dp)
+                                            .graphicsLayer(
+                                                translationX = 0f,
+                                                translationY = 0f,
+                                                scaleX = 1f,
+                                                scaleY = 1f
+                                            )
+                                            .then(animateModifier),
+                                        contentScale = ContentScale.Fit
+                                    )
+                                }
                             }
                         } else if (petModel.pet != null && petModel.pet?.type == "Cat") {
                             feedAnimation(shouldAnimate = animateFeed) { animateModifier ->
-                                Image(
-                                    painter = painterResource(id = R.drawable.kissa_crop),
-                                    contentDescription = "Cat",
-                                    modifier = Modifier
-                                        .fillMaxSize()
-                                        .padding(16.dp)
-                                        .graphicsLayer(
-                                            translationX = 0f,
-                                            translationY = 0f,
-                                            scaleX = 1f,
-                                            scaleY = 1f
-                                        )
-                                        .then(animateModifier),
-                                    contentScale = ContentScale.Fit
-                                )
+                                idleAnimation { idleModifier ->
+                                    Image(
+                                        painter = painterResource(id = R.drawable.kissa_crop),
+                                        contentDescription = "Cat",
+                                        modifier = Modifier.then(idleModifier)
+                                            .fillMaxSize()
+                                            .padding(16.dp)
+                                            .graphicsLayer(
+                                                translationX = 0f,
+                                                translationY = 0f,
+                                                scaleX = 1f,
+                                                scaleY = 1f
+                                            )
+                                            .then(animateModifier),
+                                        contentScale = ContentScale.Fit
+                                    )
+                                }
                             }
                         } else if (petModel.pet != null && petModel.pet?.type == "Hedgehog") {
                             feedAnimation(shouldAnimate = animateFeed) { animateModifier ->
-                                Image(
-                                    painter = painterResource(id = R.drawable.siili_crop),
-                                    contentDescription = "Hedgehog",
-                                    modifier = Modifier
-                                        .fillMaxSize()
-                                        .padding(16.dp)
-                                        .graphicsLayer(
-                                            translationX = 0f,
-                                            translationY = 0f,
-                                            scaleX = 1f,
-                                            scaleY = 1f
-                                        )
-                                        .then(animateModifier),
-                                    contentScale = ContentScale.Fit
-                                )
+                                idleAnimation { idleModifier ->
+                                    Image(
+                                        painter = painterResource(id = R.drawable.siili_crop),
+                                        contentDescription = "Hedgehog",
+                                        modifier = Modifier.then(idleModifier)
+                                            .fillMaxSize()
+                                            .padding(16.dp)
+                                            .graphicsLayer(
+                                                translationX = 0f,
+                                                translationY = 0f,
+                                                scaleX = 1f,
+                                                scaleY = 1f
+                                            )
+                                            .then(animateModifier),
+                                        contentScale = ContentScale.Fit
+                                    )
+                                }
                             }
                         }
                         Box(
                             modifier = Modifier
                                 .align(Alignment.BottomEnd)
-                                .padding(16.dp)
+                                .padding(16.dp),
                         ) {
                             CustomFloatingActionButton(
                                 snackbarHostState = snackbarHostState,

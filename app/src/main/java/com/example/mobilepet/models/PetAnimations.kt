@@ -88,4 +88,21 @@ object PetAnimations {
                 .offset(x = offsetX, y = offsetY)
         }
 
+    @Composable
+    fun idleAnimation(content: @Composable (Modifier) -> Unit) {
+        val offsetY = remember { Animatable(0f) }
+
+        LaunchedEffect(Unit) {
+            while (true) {
+                offsetY.animateTo(-10f, animationSpec = tween(2000))
+                offsetY.animateTo(10f, animationSpec = tween(2000))
+                offsetY.animateTo(-5f, animationSpec = tween(2000))
+                offsetY.animateTo(5f, animationSpec = tween(2000))
+            }
+        }
+        content(
+            Modifier.offset(y = offsetY.value.dp)
+        )
+    }
+
 }

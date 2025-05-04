@@ -2,6 +2,7 @@ package com.example.mobilepet.components
 
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -28,13 +29,15 @@ fun CustomFloatingActionButton(
     val coroutine = rememberCoroutineScope()
     val petModel: PetModel = viewModel()
     var animateFeed by remember { mutableStateOf(false) }
+    var lastFeedResult by remember { mutableStateOf<FeedResult?>(null) }
 
     FloatingActionButton(
         onClick = {
             val result = petModel.feedPet()
-
+            lastFeedResult = result
             triggerAnimation()
             animateFeed = true
+
             coroutine.launch {
                 when (result) {
                     is FeedResult.Success -> {
@@ -49,7 +52,12 @@ fun CustomFloatingActionButton(
                 }
             }
         },
-        modifier = Modifier.padding(16.dp)
+        modifier = Modifier.padding(16.dp),
+        containerColor = when (lastFeedResult) {
+            is FeedResult.Success -> MaterialTheme.colorScheme.primary
+            is FeedResult.TooEarly -> MaterialTheme.colorScheme.secondary
+            null -> MaterialTheme.colorScheme.primaryContainer
+        }
     ) {
         Text(text = "Feed")
     }
