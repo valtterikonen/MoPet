@@ -35,7 +35,5 @@ fun BottomNavigationBar(navController: NavController) {
             label = { Text("Settings") },
             selected = navController.currentDestination?.route == "settings"
         )
-
-
     }
 }

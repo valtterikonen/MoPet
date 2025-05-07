@@ -21,11 +21,15 @@ import com.example.mobilepet.R
 
 @Composable
 fun StatusBarsColumn(mood: Int, energy: Int, hunger: Int) {
+
+    // Määrittää kuvakkeen mielialamittarille riippuen arvosta
     val moodIcon = when {
             mood > 70 -> painterResource(id = R.drawable.happy)
             mood > 40 -> painterResource(id = R.drawable.neutral)
             else -> painterResource(id = R.drawable.sad)
     }
+
+    // Määrittää värit mittareille riippuen arvoista
     val moodColor = when {
         mood > 70 -> Color.Green
         mood > 40 -> Color.Yellow

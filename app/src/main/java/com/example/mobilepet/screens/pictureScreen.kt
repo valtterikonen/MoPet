@@ -58,6 +58,7 @@ fun PetPicture(navController: NavController) {
         )
     }
 
+    // Kysyy käyttäjältä lupaa kameraan
     val permissionLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestPermission()
     ) {
@@ -75,6 +76,7 @@ fun PetPicture(navController: NavController) {
         return
     }
 
+    // Jos lupa on saatu, käynnistetään kameran esikatselu CameraX-kirjastolla
     val imageCapture = remember { ImageCapture.Builder().build() }
     val previewView = remember { PreviewView(context) }
     val lifecycleOwner = LocalLifecycleOwner.current
@@ -92,6 +94,7 @@ fun PetPicture(navController: NavController) {
     Scaffold(snackbarHost = { SnackbarHost(snackBarHostState) }) { padding ->
         Box(Modifier.fillMaxSize().padding(padding)) {
 
+            // Näytetään kamerakuva ruudulla ja overlay-kuvana lemmikki
             AndroidView(
                 factory = { previewView },
                 modifier = Modifier.fillMaxSize()
@@ -138,6 +141,8 @@ fun PetPicture(navController: NavController) {
                 verticalArrangement = Arrangement.Bottom,
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
+
+                // Ottaa kuvan ja yhdistää overlay-kuvan lemmikistä sen päälle
                 Button(
                     onClick = {
                     val outputDirectory = context.cacheDir
@@ -197,6 +202,7 @@ fun PetPicture(navController: NavController) {
     }
 }
 
+// Tallennetaan yhdistetty kuva galleriaan MediaStore-API:n kautta
 fun saveBitmapToGallery(context: Context, bitmap: Bitmap, onResult: (Boolean) -> Unit) {
     val filename = "image_${System.currentTimeMillis()}.jpg"
     val contentValues = ContentValues().apply {
@@ -216,6 +222,7 @@ fun saveBitmapToGallery(context: Context, bitmap: Bitmap, onResult: (Boolean) ->
     } ?: onResult(false)
 }
 
+// Näyttää gallerian kuvat dialogissa
 @Composable
 fun GalleryDialog(context: Context, onDismiss: () -> Unit) {
     val images = remember { getImagesFromMediaStore(context) }

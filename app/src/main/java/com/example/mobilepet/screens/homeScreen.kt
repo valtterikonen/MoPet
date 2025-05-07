@@ -41,7 +41,7 @@ fun HomeScreen(navController: NavController, snackBarHostState: SnackbarHostStat
         showDialog = petModel.pet == null
     }
 
-    // REST TIMER
+    // Lepoajastin, jonka jälkeen PetModelin restPet() aktivoituu -->
     var lastInteractionTime by remember { mutableLongStateOf(System.currentTimeMillis()) }
 
     LaunchedEffect(lastInteractionTime) {
@@ -53,6 +53,8 @@ fun HomeScreen(navController: NavController, snackBarHostState: SnackbarHostStat
         }
     }
 
+
+    //Lemmikin luomiseen käytettävä popup-ikkuna
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -100,6 +102,8 @@ fun HomeScreen(navController: NavController, snackBarHostState: SnackbarHostStat
                 )
             }
 
+
+            //Lemmikin renderöinti
                 if (petModel.pet != null) {
                         StatusBarsColumn(
                             mood = petModel.pet?.mood ?: 0,
@@ -160,6 +164,8 @@ fun HomeScreen(navController: NavController, snackBarHostState: SnackbarHostStat
                                 .padding(16.dp),
                             horizontalArrangement = Arrangement.SpaceBetween,
                         ) {
+
+                            // Nappi lemmikin deletoimiseen
                             IconButton(onClick = {
                                 showDeleteDialog = true
                             }) {
@@ -194,6 +200,8 @@ fun HomeScreen(navController: NavController, snackBarHostState: SnackbarHostStat
                                     }
                                 )
                             }
+
+                            // Navigointi-nappi kameraruudulle
                             IconButton(onClick = {
                                 navController.navigate("picture")
                             }) {
@@ -207,6 +215,8 @@ fun HomeScreen(navController: NavController, snackBarHostState: SnackbarHostStat
                                 )
                             }
                         }
+
+                        // Lemmikin renderöinti perustuen käyttäjän valitaan
                         if (petModel.pet != null && petModel.pet?.type == "Dog") {
                             FeedAnimation(shouldAnimate = animateFeed) { animateModifier ->
                                 IdleAnimation { idleModifier ->
@@ -273,6 +283,8 @@ fun HomeScreen(navController: NavController, snackBarHostState: SnackbarHostStat
                                 .align(Alignment.BottomEnd)
                                 .padding(16.dp),
                         ) {
+
+                            //Ruokinta-nappi
                             CustomFloatingActionButton(
                                 snackBarHostState = snackBarHostState,
                                 onFeedSuccess = {

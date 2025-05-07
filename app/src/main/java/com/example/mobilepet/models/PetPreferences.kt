@@ -8,6 +8,7 @@ import kotlinx.coroutines.flow.map
 
 val Context.dataStore by preferencesDataStore(name = "pet_prefs")
 
+// Avaimet petPrefseille
 object PetKeys {
     val NAME = stringPreferencesKey("pet_name")
     val TYPE = stringPreferencesKey("pet_type")
@@ -17,6 +18,7 @@ object PetKeys {
     val LAST_FEED_TIME = longPreferencesKey("last_feed_time")
 }
 
+// PetPreferences-luokka, joka palauttaa lemmikkin tilan
 class PetPreferences(private val context: Context) {
     val mood: Flow<Int> = context.dataStore.data.map { it[PetKeys.MOOD] ?: 25 }
     val energy: Flow<Int> = context.dataStore.data.map { it[PetKeys.ENERGY] ?: 40 }
@@ -24,6 +26,7 @@ class PetPreferences(private val context: Context) {
     val name: Flow<String> = context.dataStore.data.map { it[PetKeys.NAME] ?: "" }
     val type: Flow<String> = context.dataStore.data.map { it[PetKeys.TYPE] ?: "" }
 
+    // Tallentaa lemmikin nimen ja tyypin pysyvästi
     suspend fun saveNameAndType(name: String, type: String) {
         context.dataStore.edit {
             it[PetKeys.NAME] = name
@@ -31,6 +34,7 @@ class PetPreferences(private val context: Context) {
         }
     }
 
+    // Tallentaa lemmikin StatusBar-tilat pysyvästi
     suspend fun saveStats(mood: Int, energy: Int, hunger: Int) {
         context.dataStore.edit {
             it[PetKeys.MOOD] = mood
@@ -39,6 +43,7 @@ class PetPreferences(private val context: Context) {
         }
     }
 
+    // Tallentaa viimeisimmän ruokinta-ajan millisekunteina
     suspend fun saveFeedTimestamp(timestamp: Long) {
         context.dataStore.edit {
             it[PetKeys.LAST_FEED_TIME] = timestamp
