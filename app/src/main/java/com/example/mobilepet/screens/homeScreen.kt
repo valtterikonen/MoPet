@@ -2,37 +2,31 @@ package com.example.mobilepet.screens
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.zIndex
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import androidx.navigation.compose.rememberNavController
 import com.example.mobilepet.R
 import com.example.mobilepet.components.CustomFloatingActionButton
-import com.example.mobilepet.models.PetAnimations.feedAnimation
-import com.example.mobilepet.models.PetAnimations.idleAnimation
+import com.example.mobilepet.models.PetAnimations.FeedAnimation
+import com.example.mobilepet.models.PetAnimations.IdleAnimation
 import com.example.mobilepet.models.PetModel
 import com.example.mobilepet.models.StatusBarsColumn
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 @Composable
-fun HomeScreen(navController: NavController, snackbarHostState: SnackbarHostState) {
+fun HomeScreen(navController: NavController, snackBarHostState: SnackbarHostState) {
     val petModel: PetModel = viewModel()
 
     var showDialog by remember { mutableStateOf(false) }
@@ -40,7 +34,6 @@ fun HomeScreen(navController: NavController, snackbarHostState: SnackbarHostStat
     var petType by remember { mutableStateOf("") }
     val animate = remember { mutableStateOf(false) }
     var animateFeed by remember { mutableStateOf(false) }
-    var animateFlip by remember { mutableStateOf(false) }
     val coroutineScope = rememberCoroutineScope()
     var showDeleteDialog by remember { mutableStateOf(false) }
 
@@ -49,15 +42,8 @@ fun HomeScreen(navController: NavController, snackbarHostState: SnackbarHostStat
     }
 
     // REST TIMER
-    var lastInteractionTime by remember { mutableStateOf(System.currentTimeMillis()) }
-    val interactionModifier = Modifier.pointerInput(Unit) {
-        while (true) {
-            awaitPointerEventScope {
-                awaitPointerEvent()
-                lastInteractionTime = System.currentTimeMillis()
-            }
-        }
-    }
+    var lastInteractionTime by remember { mutableLongStateOf(System.currentTimeMillis()) }
+
     LaunchedEffect(lastInteractionTime) {
         delay(120_000)
         val currentTime = System.currentTimeMillis()
@@ -120,36 +106,23 @@ fun HomeScreen(navController: NavController, snackbarHostState: SnackbarHostStat
                             energy = petModel.pet?.energy ?: 0,
                             hunger = petModel.pet?.hunger ?: 0
                         )
-                    IconButton (onClick = {
-                        navController.navigate("picture")
-                    }) {
-                        Icon(
-                            painter = painterResource(id = R.drawable.pistol),
-                            contentDescription = "Camera",
-                            modifier = Modifier
-                                .padding(8.dp)
-                                .border(1.dp, MaterialTheme.colorScheme.primary, MaterialTheme.shapes.small)
-                                .shadow(4.dp, shape = MaterialTheme.shapes.small)
-                                .alpha(0.7f)
-                        )
-                    }
                     Spacer(modifier = Modifier.height(16.dp))
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
                             .weight(0.7f)
-                            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
+                            .background(MaterialTheme.colorScheme.secondary.copy(alpha = 0.5f))
                     ) {
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .offset(y = (-24).dp)
+                                .offset(y = (-22).dp)
                         ) {
-                            Divider(
+                            HorizontalDivider(
                                 modifier = Modifier
                                     .weight(1f)
-                                    .height(1.5.dp),
+                                    .height(2.dp),
                                 color = MaterialTheme.colorScheme.primary
                             )
 
@@ -174,52 +147,69 @@ fun HomeScreen(navController: NavController, snackbarHostState: SnackbarHostStat
 
                             Spacer(modifier = Modifier.width(8.dp))
 
-                            Divider(
+                            HorizontalDivider(
                                 modifier = Modifier
                                     .weight(1f)
-                                    .height(1.5.dp),
+                                    .height(2.dp),
                                 color = MaterialTheme.colorScheme.primary
                             )
                         }
-                        IconButton (onClick = {
-                            showDeleteDialog = true
-                        }) {
-                            Icon(
-                                painter = painterResource(id = R.drawable.skull),
-                                contentDescription = "Delete",
-                                modifier = Modifier
-                                    .padding(8.dp)
-                                    .border(1.dp, MaterialTheme.colorScheme.primary, MaterialTheme.shapes.small)
-                                    .shadow(4.dp, shape = MaterialTheme.shapes.small)
-                                    .alpha(0.7f)
-                                    .align(Alignment.TopEnd)
-                            )
-                        }
-                        if (showDeleteDialog) {
-                            AlertDialog(
-                                onDismissRequest = { showDeleteDialog = false },
-                                title = { Text("Execute Pet") },
-                                text = { Text("Confirm executing your pet ${petModel.pet!!.name}?") },
-                                confirmButton = {
-                                    Button(onClick = {
-                                        petModel.resetPet()
-                                        showDeleteDialog = false
-                                    }) {
-                                        Text("Execute \uD83D\uDE22\uD83D\uDC94")
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(16.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                        ) {
+                            IconButton(onClick = {
+                                showDeleteDialog = true
+                            }) {
+                                Icon(
+                                    painter = painterResource(id = R.drawable.skull),
+                                    contentDescription = "Delete",
+                                    modifier = Modifier
+                                        .padding(8.dp)
+                                        .shadow(4.dp, shape = MaterialTheme.shapes.small),
+                                    tint = Color.White
+                                )
+                            }
+                            if (showDeleteDialog) {
+                                AlertDialog(
+                                    onDismissRequest = { showDeleteDialog = false },
+                                    title = { Text("Execute Pet") },
+                                    text = { Text("Confirm executing your pet ${petModel.pet!!.name}?") },
+                                    confirmButton = {
+                                        Button(onClick = {
+                                            petModel.resetPet()
+                                            showDeleteDialog = false
+                                        }) {
+                                            Text("Execute \uD83D\uDE22\uD83D\uDC94")
+                                        }
+                                    },
+                                    dismissButton = {
+                                        OutlinedButton(onClick = {
+                                            showDeleteDialog = false
+                                        }) {
+                                            Text("Cancel \uD83D\uDE42")
+                                        }
                                     }
-                                },
-                                dismissButton = {
-                                    OutlinedButton(onClick = {
-                                        showDeleteDialog = false
-                                    }) {
-                                        Text("Cancel \uD83D\uDE42")
-                                    }
-                                }
-                            )
+                                )
+                            }
+                            IconButton(onClick = {
+                                navController.navigate("picture")
+                            }) {
+                                Icon(
+                                    painter = painterResource(id = R.drawable.camera),
+                                    contentDescription = "Camera",
+                                    modifier = Modifier
+                                        .padding(8.dp)
+                                        .shadow(4.dp, shape = MaterialTheme.shapes.small),
+                                    tint = Color.White
+                                )
+                            }
                         }
                         if (petModel.pet != null && petModel.pet?.type == "Dog") {
-                            feedAnimation(shouldAnimate = animateFeed) { animateModifier ->
-                                idleAnimation { idleModifier ->
+                            FeedAnimation(shouldAnimate = animateFeed) { animateModifier ->
+                                IdleAnimation { idleModifier ->
                                     Image(
                                         painter = painterResource(id = R.drawable.dog_crop),
                                         contentDescription = "Dog",
@@ -238,8 +228,8 @@ fun HomeScreen(navController: NavController, snackbarHostState: SnackbarHostStat
                                 }
                             }
                         } else if (petModel.pet != null && petModel.pet?.type == "Cat") {
-                            feedAnimation(shouldAnimate = animateFeed) { animateModifier ->
-                                idleAnimation { idleModifier ->
+                            FeedAnimation(shouldAnimate = animateFeed) { animateModifier ->
+                                IdleAnimation { idleModifier ->
                                     Image(
                                         painter = painterResource(id = R.drawable.kissa_crop),
                                         contentDescription = "Cat",
@@ -258,8 +248,8 @@ fun HomeScreen(navController: NavController, snackbarHostState: SnackbarHostStat
                                 }
                             }
                         } else if (petModel.pet != null && petModel.pet?.type == "Hedgehog") {
-                            feedAnimation(shouldAnimate = animateFeed) { animateModifier ->
-                                idleAnimation { idleModifier ->
+                            FeedAnimation(shouldAnimate = animateFeed) { animateModifier ->
+                                IdleAnimation { idleModifier ->
                                     Image(
                                         painter = painterResource(id = R.drawable.siili_crop),
                                         contentDescription = "Hedgehog",
@@ -284,7 +274,7 @@ fun HomeScreen(navController: NavController, snackbarHostState: SnackbarHostStat
                                 .padding(16.dp),
                         ) {
                             CustomFloatingActionButton(
-                                snackbarHostState = snackbarHostState,
+                                snackBarHostState = snackBarHostState,
                                 onFeedSuccess = {
                                     animate.value = true
                                     coroutineScope.launch {
@@ -304,12 +294,4 @@ fun HomeScreen(navController: NavController, snackbarHostState: SnackbarHostStat
                     }
                 }
     }
-}
-
-@Preview
-@Composable
-fun HomeScreenPreview() {
-    val navController = rememberNavController()
-    val snackbarHostState = SnackbarHostState()
-    HomeScreen(navController, snackbarHostState)
 }

@@ -9,9 +9,7 @@ import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.navigation.NavController
-import androidx.navigation.compose.rememberNavController
 
 @Composable
 fun BottomNavigationBar(navController: NavController) {
@@ -40,11 +38,4 @@ fun BottomNavigationBar(navController: NavController) {
 
 
     }
-}
-
-@Preview
-@Composable
-fun BottomNavigationBarPreview() {
-    val NavController = rememberNavController()
-    BottomNavigationBar(navController = rememberNavController())
 }

@@ -42,13 +42,14 @@ android {
 }
 
 dependencies {
+
     // Saveable
     implementation("androidx.datastore:datastore-preferences:1.0.0")
 
     // Navigation
     implementation(libs.androidx.navigation.compose)
 
-    // AR dependencies (Google earth)
+    // Earth WorldWind
     implementation("earth.worldwind:worldwind:1.7.3")
     coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.5")
 

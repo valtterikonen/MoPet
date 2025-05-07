@@ -1,34 +1,29 @@
 package com.example.mobilepet.screens
 
-import android.app.Activity
 import android.content.ContentValues
 import android.content.Context
 import android.graphics.*
 import android.os.Build
 import android.provider.MediaStore
-import android.util.Log
-import android.view.ViewGroup
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.camera.core.*
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.view.PreviewView
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.asAndroidBitmap
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
@@ -45,8 +40,6 @@ import com.example.mobilepet.models.PetModel
 import kotlinx.coroutines.launch
 import java.io.File
 import java.io.OutputStream
-import java.text.SimpleDateFormat
-import java.util.*
 import java.util.concurrent.Executor
 import java.util.concurrent.Executors
 
@@ -55,7 +48,7 @@ fun PetPicture(navController: NavController) {
     val context = LocalContext.current
     val petModel: PetModel = viewModel()
     val pet = petModel.pet
-    val snackbarHostState = remember { SnackbarHostState() }
+    val snackBarHostState = remember { SnackbarHostState() }
     val coroutineScope = rememberCoroutineScope()
     var showGallery by remember { mutableStateOf(false) }
 
@@ -96,7 +89,7 @@ fun PetPicture(navController: NavController) {
         cameraProvider.bindToLifecycle(lifecycleOwner, cameraSelector, preview, imageCapture)
     }
 
-    Scaffold(snackbarHost = { SnackbarHost(snackbarHostState) }) { padding ->
+    Scaffold(snackbarHost = { SnackbarHost(snackBarHostState) }) { padding ->
         Box(Modifier.fillMaxSize().padding(padding)) {
 
             AndroidView(
@@ -130,7 +123,7 @@ fun PetPicture(navController: NavController) {
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 IconButton(onClick = { navController.popBackStack() }, modifier = Modifier.size(48.dp)) {
-                    Icon(Icons.Default.ArrowBack, contentDescription = "Back", modifier = Modifier.size(32.dp))
+                    Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", modifier = Modifier.size(32.dp))
                 }
                 Text("Take a Picture", fontSize = 18.sp)
                 IconButton(onClick = { showGallery = true }, modifier = Modifier.size(48.dp)) {
@@ -175,14 +168,14 @@ fun PetPicture(navController: NavController) {
 
                                 saveBitmapToGallery(context, finalBitmap) {
                                     coroutineScope.launch {
-                                        snackbarHostState.showSnackbar(if (it) "Image saved!" else "Error saving image.")
+                                        snackBarHostState.showSnackbar(if (it) "Image saved!" else "Error saving image.")
                                     }
                                 }
                             }
 
                             override fun onError(exception: ImageCaptureException) {
                                 coroutineScope.launch {
-                                    snackbarHostState.showSnackbar("Virhe: ${exception.message}")
+                                    snackBarHostState.showSnackbar("Error: ${exception.message}")
                                 }
                             }
                         }
@@ -205,7 +198,7 @@ fun PetPicture(navController: NavController) {
 }
 
 fun saveBitmapToGallery(context: Context, bitmap: Bitmap, onResult: (Boolean) -> Unit) {
-    val filename = "petshot_${System.currentTimeMillis()}.jpg"
+    val filename = "image_${System.currentTimeMillis()}.jpg"
     val contentValues = ContentValues().apply {
         put(MediaStore.Images.Media.DISPLAY_NAME, filename)
         put(MediaStore.Images.Media.MIME_TYPE, "image/jpeg")

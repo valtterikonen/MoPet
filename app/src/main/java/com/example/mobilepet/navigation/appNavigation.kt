@@ -12,9 +12,10 @@ import com.example.mobilepet.screens.PetPicture
 import com.example.mobilepet.screens.SettingsScreen
 
 @Composable
-fun AppNavigation(isLightTheme: MutableState<Boolean>) { // Pass the theme state
+fun AppNavigation(isLightTheme: MutableState<Boolean>) {
     val navController = rememberNavController()
-    val snackbarHostState = remember { SnackbarHostState() }
+    val snackBarHostState = remember { SnackbarHostState() }
+    navController.currentBackStackEntryAsState().value?.destination?.route
 
     NavHost(
         navController = navController,
@@ -27,19 +28,19 @@ fun AppNavigation(isLightTheme: MutableState<Boolean>) { // Pass the theme state
                 bottomBar = { BottomNavigationBar(navController) }
             ) { innerPadding ->
                 Column(modifier = Modifier.padding(innerPadding)) {
-                    ExerciseScreen(navController)
+                    ExerciseScreen()
                 }
             }
         }
 
         composable("home") {
             Scaffold(
-                snackbarHost = { SnackbarHost(snackbarHostState) },
+                snackbarHost = { SnackbarHost(snackBarHostState) },
                 containerColor = MaterialTheme.colorScheme.background,
                 bottomBar = { BottomNavigationBar(navController) }
             ) { innerPadding ->
                 Column(modifier = Modifier.padding(innerPadding)) {
-                    HomeScreen(navController, snackbarHostState)
+                    HomeScreen(navController, snackBarHostState)
                 }
             }
         }

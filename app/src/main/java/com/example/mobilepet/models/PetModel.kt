@@ -1,17 +1,14 @@
 package com.example.mobilepet.models
 
 import android.app.Application
-import android.util.Log
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.mobilepet.components.Pet
 import com.example.mobilepet.database.getDatabase
 import kotlinx.coroutines.flow.first
-import com.example.mobilepet.models.PetPreferences
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.launch
 

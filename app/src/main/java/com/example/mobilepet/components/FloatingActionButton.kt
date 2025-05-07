@@ -22,7 +22,7 @@ import kotlinx.coroutines.launch
 
 @Composable
 fun CustomFloatingActionButton(
-    snackbarHostState: SnackbarHostState,
+    snackBarHostState: SnackbarHostState,
     onFeedSuccess: () -> Unit,
     triggerAnimation: () -> Unit
 ) {
@@ -42,12 +42,12 @@ fun CustomFloatingActionButton(
                 when (result) {
                     is FeedResult.Success -> {
                         onFeedSuccess()
-                        snackbarHostState.showSnackbar("Pet fed!")
+                        snackBarHostState.showSnackbar("Pet fed!")
                     }
 
                     is FeedResult.TooEarly -> {
                         val secondsLeft = (result.remainingTimeMs / 1000).coerceAtLeast(1)
-                        snackbarHostState.showSnackbar("Too soon! Try again in $secondsLeft s")
+                        snackBarHostState.showSnackbar("Too soon! Try again in $secondsLeft s")
                     }
                 }
             }

@@ -13,15 +13,14 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.navigation.NavController
-import androidx.navigation.compose.rememberNavController
 import com.example.mobilepet.models.PetModel
 import earth.worldwind.WorldWindow
 import earth.worldwind.geom.AltitudeMode
+import earth.worldwind.geom.Angle
+import earth.worldwind.geom.Camera
 import earth.worldwind.geom.Position
 import earth.worldwind.layer.BlueMarbleLayer
 import earth.worldwind.layer.RenderableLayer
@@ -33,19 +32,21 @@ import kotlinx.coroutines.*
 import kotlin.math.sqrt
 
 @Composable
-fun ExerciseScreen(navController: NavController) {
+fun ExerciseScreen() {
     val context = LocalContext.current
     val petModel: PetModel = viewModel()
     val worldWindow = remember { createWorldWindow(context) }
 
     var showTrajectory by remember { mutableStateOf(false) }
-    val currentSteps = remember { mutableStateOf(0) }
-    var lastExerciseStep by remember { mutableStateOf(0) }
+    var isExercising by remember { mutableStateOf(false) }
+    val currentSteps = remember { mutableIntStateOf(0) }
+    var lastExerciseStep by remember { mutableIntStateOf(0) }
 
-    val goalSteps = 10000
+    val goalSteps = 1000
     val positions = remember { generateRandomPositions(3) }
     val marker = remember { createMarker(positions.first()) }
 
+    // Sennsorin kuuntelija askelien laskemiseen
     DisposableEffect(Unit) {
         val sensorManager = context.getSystemService(Context.SENSOR_SERVICE) as SensorManager
         val accelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER)
@@ -54,9 +55,10 @@ fun ExerciseScreen(navController: NavController) {
         val stepThreshold = 1f
         var lastStepTime = 0L
 
+        // SensorEventListener askelien laskemiseen
         val stepListener = object : SensorEventListener {
             override fun onSensorChanged(event: SensorEvent?) {
-                if (event == null) return
+                if (event == null || !isExercising) return
 
                 val x = event.values[0]
                 val y = event.values[1]
@@ -70,15 +72,15 @@ fun ExerciseScreen(navController: NavController) {
                 if (delta > stepThreshold && currentTime - lastStepTime > 300) {
                     lastStepTime = currentTime
 
-                    currentSteps.value++
-                    Log.d("EXERCISE", "Askel: ${currentSteps.value}")
+                    currentSteps.intValue++
+                    Log.d("EXERCISE", "Askel: ${currentSteps.intValue}")
 
-                    updateMarkerPosition(marker, positions, currentSteps.value, goalSteps)
+                    updateMarkerPosition(marker, positions, currentSteps.intValue, goalSteps, worldWindow)
                     worldWindow.requestRedraw()
 
-                    if (currentSteps.value >= lastExerciseStep + 50) {
+                    if (currentSteps.intValue >= lastExerciseStep + 50) {
                         petModel.exercisePet()
-                        lastExerciseStep = currentSteps.value
+                        lastExerciseStep = currentSteps.intValue
                     }
                 }
             }
@@ -86,10 +88,12 @@ fun ExerciseScreen(navController: NavController) {
             override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) {}
         }
 
+        // Rekisteröidään sensorin kuuntelija
         if (accelerometer != null) {
             sensorManager.registerListener(stepListener, accelerometer, SensorManager.SENSOR_DELAY_UI)
         }
 
+        // Poistetaan kuuntelija kun komponentti tuhotaan
         onDispose {
             sensorManager.unregisterListener(stepListener)
         }
@@ -99,6 +103,7 @@ fun ExerciseScreen(navController: NavController) {
         floatingActionButton = {
             FloatingActionButton(
                 onClick = {
+                    isExercising = !isExercising
                     showTrajectory = !showTrajectory
                     if (showTrajectory) {
                         addMarker(worldWindow, marker)
@@ -106,7 +111,7 @@ fun ExerciseScreen(navController: NavController) {
                 },
                 modifier = Modifier.padding(16.dp)
             ) {
-                Text(text = "Exercise", color = androidx.compose.ui.graphics.Color.White)
+                Text(text = if (isExercising) "Stop" else "Exercise")
             }
         }
     ) { innerPadding ->
@@ -127,20 +132,21 @@ fun ExerciseScreen(navController: NavController) {
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     Text(
-                        text = "Steps: ${currentSteps.value} / $goalSteps",
+                        text = "Steps: ${currentSteps.intValue} / $goalSteps",
                         style = MaterialTheme.typography.bodyLarge
                     )
                     LinearProgressIndicator(
-                        progress = (currentSteps.value / goalSteps.toFloat()).coerceIn(0f, 1f),
+                        progress = { (currentSteps.intValue / goalSteps.toFloat()).coerceIn(0f, 1f) },
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(top = 8.dp)
                     )
                 }
             }
-
+            // Näytetään WorldWindow kerros
             AndroidView(factory = { worldWindow })
 
+            // Lisätään reittikerros ja merkki
             if (showTrajectory) {
                 addTrajectoryLayer(worldWindow, positions)
                 addMarker(worldWindow, marker)
@@ -149,12 +155,14 @@ fun ExerciseScreen(navController: NavController) {
     }
 }
 
+// Luodaan WorldWindow-olio
 fun createWorldWindow(context: Context): WorldWindow {
     val worldWindow = WorldWindow(context)
     worldWindow.engine.layers.addLayer(BlueMarbleLayer())
     return worldWindow
 }
 
+// Lisätään reittikerros
 fun addTrajectoryLayer(worldWindow: WorldWindow, positions: List<Position>) {
     val layer = RenderableLayer()
     val path = Path(positions).apply {
@@ -184,34 +192,96 @@ fun addTrajectoryLayer(worldWindow: WorldWindow, positions: List<Position>) {
     }
 }
 
+// Luodaan merkki
 fun createMarker(position: Position): Placemark {
-    val attributes = PlacemarkAttributes().apply { imageSource = null }
+    val attributes = PlacemarkAttributes().apply {
+        imageSource = null
+        imageScale = 6.0
+    }
     return Placemark(position).apply {
         this.attributes = attributes
         altitudeMode = AltitudeMode.CLAMP_TO_GROUND
     }
 }
 
-fun updateMarkerPosition(marker: Placemark, positions: List<Position>, currentSteps: Int, goalSteps: Int) {
-    val progress = (currentSteps.toFloat() / goalSteps).coerceIn(0f, 1f)
+// Päivitetään merkin sijainti
+fun updateMarkerPosition(
+    marker: Placemark,
+    positions: List<Position>,
+    currentSteps: Int,
+    goalSteps: Int,
+    worldWindow: WorldWindow
+) {
+    val progress = calculateProgress(currentSteps, goalSteps)
+    val (start, end, segmentProgress) = calculateSegment(positions, progress)
+
+    updateMarkerPosition(marker, start, end, segmentProgress)
+    updateCameraPosition(worldWindow, marker)
+    worldWindow.requestRedraw()
+}
+
+// Lasketaan edistymisprosentti
+private fun calculateProgress(currentSteps: Int, goalSteps: Int): Float {
+    return (currentSteps.toFloat() / goalSteps).coerceIn(0f, 1f)
+}
+
+// Lasketaan segmentti
+private fun calculateSegment(
+    positions: List<Position>,
+    progress: Float
+): Triple<Position, Position, Float> {
     val segmentCount = positions.size - 1
     val segmentIndex = (progress * segmentCount).toInt().coerceAtMost(segmentCount - 1)
     val segmentProgress = (progress * segmentCount) - segmentIndex
-
-    val start = positions[segmentIndex]
-    val end = positions[segmentIndex + 1]
-
-    marker.position.latitude = start.latitude + (end.latitude - start.latitude) * segmentProgress
-    marker.position.longitude = start.longitude + (end.longitude - start.longitude) * segmentProgress
-    marker.position.altitude = start.altitude + (end.altitude - start.altitude) * segmentProgress
+    return Triple(positions[segmentIndex], positions[segmentIndex + 1], segmentProgress)
 }
 
+// Päivitetään merkin sijainti
+private fun updateMarkerPosition(
+    marker: Placemark,
+    start: Position,
+    end: Position,
+    segmentProgress: Float
+) {
+    marker.position.latitude = interpolate(start.latitude.inDegrees, end.latitude.inDegrees, segmentProgress).let {
+        Angle.fromDegrees(it)
+    }
+    marker.position.longitude = interpolate(start.longitude.inDegrees, end.longitude.inDegrees, segmentProgress).let {
+        Angle.fromDegrees(it)
+    }
+    marker.position.altitude = interpolate(start.altitude, end.altitude, segmentProgress)
+}
+
+// Päivitetään kameran sijainti aloitus- ja lopetussijainnin mukaan
+private fun updateCameraPosition(worldWindow: WorldWindow, marker: Placemark) {
+    updateCameraPosition(
+        worldWindow.engine.camera,
+        marker.position.latitude,
+        marker.position.longitude,
+        marker.position.altitude + 10_000_000.0
+    )
+}
+
+// Päivitetään kameran sijainti liikkeen aikana
+private fun updateCameraPosition(camera: Camera, latitude: Angle, longitude: Angle, altitude: Double) {
+    camera.position.latitude = latitude
+    camera.position.longitude = longitude
+    camera.position.altitude = altitude
+}
+
+// Interpoloi kahden arvon välillä
+private fun interpolate(start: Double, end: Double, fraction: Float): Double {
+    return start + (end - start) * fraction
+}
+
+// Lisätään merkki kartalle
 fun addMarker(worldWindow: WorldWindow, marker: Placemark) {
     val layer = RenderableLayer()
     layer.addRenderable(marker)
     worldWindow.engine.layers.addLayer(layer)
 }
 
+// Generoidaan satunnaisia sijainteja
 fun generateRandomPositions(count: Int): List<Position> {
     val coords = listOf(
         Position.fromDegrees(60.0, 24.0, 0.0),
@@ -226,11 +296,4 @@ fun generateRandomPositions(count: Int): List<Position> {
         Position.fromDegrees(1.3521, 103.8198, 0.0)
     )
     return List(count) { coords.random() }
-}
-
-
-@Preview
-@Composable
-fun ExerciseScreenPreview() {
-    ExerciseScreen(navController = rememberNavController())
 }

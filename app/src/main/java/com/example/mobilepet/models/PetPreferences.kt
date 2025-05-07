@@ -21,7 +21,6 @@ class PetPreferences(private val context: Context) {
     val mood: Flow<Int> = context.dataStore.data.map { it[PetKeys.MOOD] ?: 25 }
     val energy: Flow<Int> = context.dataStore.data.map { it[PetKeys.ENERGY] ?: 40 }
     val hunger: Flow<Int> = context.dataStore.data.map { it[PetKeys.HUNGER] ?: 50 }
-    val lastFeedTime: Flow<Long> = context.dataStore.data.map { it[PetKeys.LAST_FEED_TIME] ?: 0L }
     val name: Flow<String> = context.dataStore.data.map { it[PetKeys.NAME] ?: "" }
     val type: Flow<String> = context.dataStore.data.map { it[PetKeys.TYPE] ?: "" }
 
