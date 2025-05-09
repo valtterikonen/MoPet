@@ -47,5 +47,5 @@ ___
 
 ___ 
 ## Authors
-Valtteri Ikonen
-Lenni Liukkonen
+- Valtteri Ikonen
+- Lenni Liukkonen
