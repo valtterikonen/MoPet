@@ -7,7 +7,9 @@ ___
 1. Clone the repository
 2. Open the cloned project in Android Studios
 3. Check the AndroidManifest.xml and make sure the following details are correct:
-    - <uses-permission android:name="android.permission.INTERNET" />
+    - ```xml
+      <uses-permission android:name="android.permission.INTERNET" />
+      ```
     - <uses-permission android:name="android.permission.ACTIVITY_RECOGNITION" />
     - <uses-permission android:name="android.permission.CAMERA" />
     - <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
