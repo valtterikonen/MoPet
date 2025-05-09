@@ -10,9 +10,15 @@ ___
     - ```xml
       <uses-permission android:name="android.permission.INTERNET" />
       ```
-    - <uses-permission android:name="android.permission.ACTIVITY_RECOGNITION" />
-    - <uses-permission android:name="android.permission.CAMERA" />
-    - <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
+    - ```xml
+      <uses-permission android:name="android.permission.ACTIVITY_RECOGNITION" />
+      ```
+    - ```xml
+      <uses-permission android:name="android.permission.CAMERA" />
+      ```
+    - ```xml
+      <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
+      ```
     - allowBackup="false"
 4. Run the application
 ___
